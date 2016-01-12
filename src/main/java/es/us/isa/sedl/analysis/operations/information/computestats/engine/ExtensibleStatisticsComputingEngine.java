@@ -62,7 +62,7 @@ public class ExtensibleStatisticsComputingEngine extends ImplementationsRegistry
         return findSuitableComputingEngine(s)!=null;
     }
 
-    protected static final String token(int i) {
+    public static final String token(int i) {
         String result = null;
         try {                                    
             result = SEDL4PeopleLexer.VOCABULARY.getLiteralName(i).replace("'", "");

@@ -6,12 +6,11 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>SEDLAnalyzer</name>
+    <name>SEDL Documents Analyzer</name>
     <url>http://maven.apache.org</url>
 
     <properties>     
-        <sedl.version>0.0.1-SNAPSHOT</sedl.version>           
-        <statservice.version>0.1-SNAPSHOT</statservice.version>              
+        <sedl.version>0.0.1-SNAPSHOT</sedl.version>                   
         <jdataset.version>0.1-SNAPSHOT</jdataset.version>
     </properties>
 

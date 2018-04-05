@@ -13,7 +13,7 @@ import es.us.isa.sedl.analysis.operations.information.computestats.renderer.Exte
 import es.us.isa.sedl.analysis.operations.validation.DatasetValidations;
 import es.us.isa.sedl.core.BasicExperiment;
 import es.us.isa.sedl.core.analysis.statistic.Statistic;
-import es.us.isa.sedl.core.analysis.statistic.StatisticalAnalysisSpec;
+import es.us.isa.sedl.core.design.StatisticalAnalysisSpec;
 import es.us.isa.sedl.core.configuration.Configuration;
 import es.us.isa.sedl.core.configuration.InputDataSource;
 import es.us.isa.sedl.core.design.AnalysisSpecification;

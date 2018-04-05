@@ -7,7 +7,7 @@ import es.us.isa.sedl.core.analysis.datasetspecification.GroupFilter;
 import es.us.isa.sedl.core.analysis.datasetspecification.ValuationFilter;
 import es.us.isa.sedl.core.analysis.statistic.NHST;
 import es.us.isa.sedl.core.analysis.statistic.Statistic;
-import es.us.isa.sedl.core.analysis.statistic.StatisticalAnalysisSpec;
+import es.us.isa.sedl.core.design.StatisticalAnalysisSpec;
 import es.us.isa.sedl.core.design.AnalysisSpecification;
 import es.us.isa.sedl.core.design.ExtensionDomain;
 import es.us.isa.sedl.core.design.Variable;

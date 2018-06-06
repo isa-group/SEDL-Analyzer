@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 package es.us.isa.sedl.analysis.operations.information.computestats.engine;
-	 
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,11 +14,12 @@ import es.us.isa.jdataset.Column;
 import es.us.isa.jdataset.DataSet;
 import es.us.isa.sedl.analysis.operations.information.computestats.StatisticalAnalysisOperation;
 import es.us.isa.sedl.analysis.operations.information.computestats.UnsupportedStatisticException;
+import es.us.isa.sedl.core.analysis.datasetspecification.DatasetSpecification;
+import es.us.isa.sedl.core.analysis.datasetspecification.Projection;
 import es.us.isa.sedl.core.analysis.statistic.DescriptiveStatistic;
 import es.us.isa.sedl.core.analysis.statistic.DescriptiveStatisticValue;
 import es.us.isa.sedl.core.analysis.statistic.Statistic;
 import es.us.isa.sedl.core.analysis.statistic.StatisticalAnalysisResult;
-
 
 /**
  *
@@ -64,67 +65,74 @@ public class DescriptiveStatisticsComputingEngine implements StatisticComputingE
     }
 
     private List<StatisticalAnalysisResult> computeMean(StatisticalAnalysisOperation operation) {
-        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();                
-        for (Column c :operation.getDataset().getColumns()) {
-            result.add(createDSV(operation, computeMean(c)));
+        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();
+        DescriptiveStatisticValue dsv = null;
+        for (Column c : operation.getDataset().getColumns()) {
+            dsv = createDSV(operation, computeMean(c));
+            refactorProjections(dsv, c);
+            result.add(dsv);
         }
         return result;
     }
-    
-    
-    public Double computeMean(Column<? extends Number> column)
-    {
-        Double sum=0.0;
-        Integer observations=0;
-        for(Number n:column){
-            if(n!=null){
-                sum+=n.doubleValue();
+
+    public Double computeMean(Column<? extends Number> column) {
+        Double sum = 0.0;
+        Integer observations = 0;
+        for (Number n : column) {
+            if (n != null) {
+                sum += n.doubleValue();
                 observations++;
             }
         }
-        return sum/observations;
+        return sum / observations;
     }
 
     private List<StatisticalAnalysisResult> computeMedian(StatisticalAnalysisOperation operation) {
         List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();
         DataSet dataset = operation.getDataset();
-        for (Column column : dataset.getColumns()) {            
-            result.add(createDSV(operation, computeMedian(column)));
+        DescriptiveStatisticValue dsv = null;
+        for (Column column : dataset.getColumns()) {
+            dsv = createDSV(operation, computeMedian(column));
+            refactorProjections(dsv, column);
+            result.add(dsv);
         }
         return result;
     }
-    
-    public Double computeMedian(Column<? extends Number> column)
-    {
-            Double median = 0.0;
-            List<Double> params = sort(column);
-            if (params.size() % 2 == 0) {
-                Number n =  params.get((params.size() / 2) - 1);
-                Number n1 = params.get((params.size() / 2) + 1 - 1);
-                median = (n.doubleValue() + n1.doubleValue()) / 2;
-            } else {
-                Number n = params.get((params.size() / 2) + 1);
-                median = n.doubleValue();
-            }
-            return median;
+
+    public Double computeMedian(Column<? extends Number> column) {
+        Double median = 0.0;
+        List<Double> params = sort(column);
+        if (params.size() % 2 == 0) {
+            Number n = params.get((params.size() / 2) - 1);
+            Number n1 = params.get((params.size() / 2) + 1 - 1);
+            median = (n.doubleValue() + n1.doubleValue()) / 2;
+        } else {
+            Number n = params.get((params.size() / 2) + 1);
+            median = n.doubleValue();
+        }
+        return median;
     }
 
     public List<StatisticalAnalysisResult> computeMode(StatisticalAnalysisOperation operation) {
         List<Map<String, Integer>> aux = new ArrayList<Map<String, Integer>>();
         List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();
         DataSet dataset = operation.getDataset();
+        DescriptiveStatisticValue dsv = null;
         for (Column column : dataset.getColumns()) {
-            result.add(createDSV(operation, computeMode(column).toString()));
+            dsv = createDSV(operation, computeMode(column).toString());
+            refactorProjections(dsv, column);
+            result.add(dsv);
         }
         return result;
     }
 
     public Object computeMode(Column column) {
         List params = null;
-        if(Comparable.class.isAssignableFrom(column.getClass()))
-            params=order(column);
-        else if(Number.class.isAssignableFrom(column.getClass()))
-            params=sort(column);        
+        if (Comparable.class.isAssignableFrom(column.getClass())) {
+            params = order(column);
+        } else if (Number.class.isAssignableFrom(column.getClass())) {
+            params = sort(column);
+        }
         Object prev = null;
         Integer actualCount = 0, modeCount = 0;
         Object mode = null;
@@ -144,103 +152,113 @@ public class DescriptiveStatisticsComputingEngine implements StatisticComputingE
     }
 
     public List<StatisticalAnalysisResult> computeStandardDesviation(StatisticalAnalysisOperation operation) {
-        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();                        
-        for (Column column : operation.getDataset().getColumns()) {            
-            result.add(createDSV(operation,computeStandartdDeviation(column)));
+        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();
+        DescriptiveStatisticValue dsv=null;
+        for (Column column : operation.getDataset().getColumns()) {
+            dsv=createDSV(operation, computeStandartdDeviation(column));
+            refactorProjections(dsv, column);
+            result.add(dsv);
         }
         return result;
     }
-    
-    public Double computeStandartdDeviation(Column<? extends Number> column)            
-    {
-            Double stdDev = 0.0;
-            Integer N = column.size();
-            Double sumatory = 0.0, mean = 0.0;
-            Integer count=0;
-            for (Number n:column) {
-                if (n != null) {
-                    mean = mean + n.doubleValue();
-                    count++;
-                }
+
+    public Double computeStandartdDeviation(Column<? extends Number> column) {
+        Double stdDev = 0.0;
+        Integer N = column.size();
+        Double sumatory = 0.0, mean = 0.0;
+        Integer count = 0;
+        for (Number n : column) {
+            if (n != null) {
+                mean = mean + n.doubleValue();
+                count++;
             }
-            mean = mean / count;
-            for (Number n:column) {
-                if (n != null) {
-                    sumatory += ((n.doubleValue() - mean) * (n.doubleValue() - mean));
-                }
+        }
+        mean = mean / count;
+        for (Number n : column) {
+            if (n != null) {
+                sumatory += ((n.doubleValue() - mean) * (n.doubleValue() - mean));
             }
-            stdDev = Math.sqrt(sumatory / count);
-            return stdDev;
-        
+        }
+        stdDev = Math.sqrt(sumatory / count);
+        return stdDev;
+
     }
 
     public List<StatisticalAnalysisResult> computeVariance(StatisticalAnalysisOperation operation) {
-        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();                
-        for (Column column : operation.getDataset().getColumns())            
-            result.add(createDSV(operation, computeVariance(column)));
+        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();
+        DescriptiveStatisticValue dsv=null;
+        for (Column column : operation.getDataset().getColumns()) {
+            dsv=createDSV(operation, computeVariance(column));
+            refactorProjections(dsv, column);
+            result.add(dsv);
+        }
         return result;
     }
-    
-    public Double computeVariance(Column<? extends Number> column)
-    {
+
+    public Double computeVariance(Column<? extends Number> column) {
         Double sumatory = 0.0;
         Double mean = computeMean(column);
         Double variance = 0.0;
         Double N = 0.0;
-        for (Number n:column) {
-            if(n!=null){
-                sumatory+= (n.doubleValue() * N.doubleValue());
+        for (Number n : column) {
+            if (n != null) {
+                sumatory += (n.doubleValue() * N.doubleValue());
                 N++;
             }
         }
         return ((1.0 / N) * sumatory) - (mean * mean);
     }
-    
-    
 
     private List<StatisticalAnalysisResult> computeIQR(StatisticalAnalysisOperation operation) {
-        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();        
-        for (Column column : operation.getDataset().getColumns())                        
-            result.add(createDSV(operation, computeIQR(column)));        
+        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();
+        DescriptiveStatisticValue dsv=null;
+        for (Column column : operation.getDataset().getColumns()) {
+            dsv=createDSV(operation, computeIQR(column));
+            refactorProjections(dsv, column);
+            result.add(dsv);
+        }
         return result;
     }
-    
-    public Double computeIQR(Column<? extends Number> column)
-    {
-            List<Double> params = sort(column);
-            int index1, index2, index3;
-            Double n = new Double(column.size());
-            Double q1 = (n * 1.0) / 4.0;
-            Double q2 = (n * 2.0) / 4.0;
-            Double q3 = (n * 3.0) / 4.0;
-            String decimal1 = q1.toString().split("\\.")[1];
-            String decimal2 = q2.toString().split("\\.")[1];
-            String decimal3 = q3.toString().split("\\.")[1];
-            if (new Integer(decimal1) < 5) {
-                index1 = new Integer(q1.toString().split("\\.")[0]) - 1;
-            } else {
-                index1 = new Integer(q1.toString().split("\\.")[0]) + 1 - 1;
-            }
-            if (new Integer(decimal2) < 5) {
-                index2 = new Integer(q2.toString().split("\\.")[0]) - 1;
-            } else {
-                index2 = new Integer(q2.toString().split("\\.")[0]) + 1 - 1;
-            }
-            if (new Integer(decimal3) < 5) {
-                index3 = new Integer(q3.toString().split("\\.")[0]) - 1;
-            } else {
-                index3 = new Integer(q3.toString().split("\\.")[0]) + 1 - 1;
-            }
-            q1 = params.get(index1);
-            q2 = params.get(index2);
-            q3 = params.get(index3);
-            return q3 - q1;
+
+    public Double computeIQR(Column<? extends Number> column) {
+        List<Double> params = sort(column);
+        int index1, index2, index3;
+        Double n = new Double(column.size());
+        Double q1 = (n * 1.0) / 4.0;
+        Double q2 = (n * 2.0) / 4.0;
+        Double q3 = (n * 3.0) / 4.0;
+        String decimal1 = q1.toString().split("\\.")[1];
+        String decimal2 = q2.toString().split("\\.")[1];
+        String decimal3 = q3.toString().split("\\.")[1];
+        if (new Integer(decimal1) < 5) {
+            index1 = new Integer(q1.toString().split("\\.")[0]) - 1;
+        } else {
+            index1 = new Integer(q1.toString().split("\\.")[0]) + 1 - 1;
+        }
+        if (new Integer(decimal2) < 5) {
+            index2 = new Integer(q2.toString().split("\\.")[0]) - 1;
+        } else {
+            index2 = new Integer(q2.toString().split("\\.")[0]) + 1 - 1;
+        }
+        if (new Integer(decimal3) < 5) {
+            index3 = new Integer(q3.toString().split("\\.")[0]) - 1;
+        } else {
+            index3 = new Integer(q3.toString().split("\\.")[0]) + 1 - 1;
+        }
+        q1 = params.get(index1);
+        q2 = params.get(index2);
+        q3 = params.get(index3);
+        return q3 - q1;
     }
 
     public List<StatisticalAnalysisResult> computeRange(StatisticalAnalysisOperation operation) {
-        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();        
-        for (Column column : operation.getDataset().getColumns())
-            result.add(createDSV(operation, computeRange(column)));
+        List<StatisticalAnalysisResult> result = new ArrayList<StatisticalAnalysisResult>();
+        DescriptiveStatisticValue dsv=null;
+        for (Column column : operation.getDataset().getColumns()) {
+            dsv=createDSV(operation, computeRange(column));
+            refactorProjections(dsv, column);
+            result.add(dsv);
+        }
         return result;
     }
 
@@ -284,7 +302,7 @@ public class DescriptiveStatisticsComputingEngine implements StatisticComputingE
         DescriptiveStatisticValue dsv = new DescriptiveStatisticValue();
         dsv.setValue(value);
         dsv.setDescriptiveStatistic(operation.getStatistic().getClass().getSimpleName());
-        dsv.setDatasetSpecification(operation.getStatistic().getDatasetSpecification());
+        dsv.setDatasetSpecification((DatasetSpecification) operation.getStatistic().getDatasetSpecification().clone());
         return dsv;
     }
 
@@ -296,13 +314,13 @@ public class DescriptiveStatisticsComputingEngine implements StatisticComputingE
         List<? extends Comparable> result = new ArrayList<Comparable>(params);
         Collections.sort(result);
         return result;
-    }        
-    
-    public List<Double> sort(Column<? extends Number> params)
-    {
-        List<Double> result=new ArrayList<>(params.size());
-        for(Number n:params)
+    }
+
+    public List<Double> sort(Column<? extends Number> params) {
+        List<Double> result = new ArrayList<>(params.size());
+        for (Number n : params) {
             result.add(n.doubleValue());
+        }
         Collections.sort(result);
         return result;
     }
@@ -310,5 +328,12 @@ public class DescriptiveStatisticsComputingEngine implements StatisticComputingE
     @Override
     public Class<? extends Statistic> supportedStatistic() {
         return DescriptiveStatistic.class;
+    }
+
+    private void refactorProjections(DescriptiveStatisticValue dsv, Column column) {
+        dsv.getDatasetSpecification().getProjections().clear();
+        Projection p = new Projection();
+        p.getProjectedVariables().add(column.getName());
+        dsv.getDatasetSpecification().getProjections().add(p);
     }
 }

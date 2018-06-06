@@ -34,15 +34,12 @@ public class DatasetValidations {
 			errors.add(ve);
 		}
 		for(Outcome outcome : outcomes){
-			if(dataset.getColumn(outcome.getName())!=null){
-				flagOutcome = true;			
+			if(dataset.getColumn(outcome.getName())==null){
+                            ValidationError<BasicExperiment> ve = new ValidationError<BasicExperiment>(experiment, ERROR_SEVERITY.ERROR, 
+					"[ERROR] There outcome varaible '"+outcome.getName()+"' is not present as a column in the data set");
+                            errors.add(ve);
 			}
-		}
-		if(!flagOutcome){
-			ValidationError<BasicExperiment> ve = new ValidationError<BasicExperiment>(experiment, ERROR_SEVERITY.ERROR, 
-					"[ERROR] There aren't outcomes in dataset, please review dataset.");
-			errors.add(ve);
-		}
+		}						
 	}
 	private void checkOutcomesValues(DataSet dataset, BasicExperiment experiment, List<ValidationError<BasicExperiment>> errors){
 		List<Outcome> outcomes = experiment.getDesign().getOutcomes();

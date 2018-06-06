@@ -58,7 +58,7 @@ public class ExtensibleStatisticalResultsRenderer extends ImplementationsRegistr
         String result="";
         for(Class<? extends StatisticalAnalysisResult> sClass:subRenderers.keySet())
             if(sClass.isInstance(staresult))
-                result+=subRenderers.get(sClass).render(staresult);
+                result+=(subRenderers.get(sClass).render(staresult)+"<br>");
         return result;
     }
     

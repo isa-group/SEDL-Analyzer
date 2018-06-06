@@ -17,9 +17,11 @@ import es.us.isa.sedl.core.design.StatisticalAnalysisSpec;
 import es.us.isa.sedl.core.configuration.Configuration;
 import es.us.isa.sedl.core.configuration.InputDataSource;
 import es.us.isa.sedl.core.design.AnalysisSpecification;
+import es.us.isa.sedl.core.design.AnalysisSpecificationGroup;
 import es.us.isa.sedl.core.design.Outcome;
 import es.us.isa.sedl.core.execution.Execution;
 import es.us.isa.sedl.core.execution.ExperimentalResult;
+import es.us.isa.sedl.core.execution.ResultsFile;
 import es.us.isa.sedl.core.util.Error.ERROR_SEVERITY;
 import es.us.isa.sedl.runtime.analysis.AbstractAnalysisOperation;
 import es.us.isa.sedl.runtime.analysis.validation.ValidationError;
@@ -61,14 +63,14 @@ public class ComputeStats extends AbstractAnalysisOperation<StatisticalAnalysisC
             List<String> result = new ArrayList<String>();
             for (Configuration conf : element.getConfigurations()) {
                 result.addAll(getCandidateDatasetFilesFromExecutions(conf));
-
-                if (!conf.getExperimentalInputs().getInputDataSources().isEmpty()) {
-                    for (InputDataSource in : conf.getExperimentalInputs().getInputDataSources()) {
-                        result.add(in.getFile().getPath());
-                        log.finest(" add: " + in.getFile().getPath());
+                if(conf.getExperimentalInputs()!=null){
+                    if (!conf.getExperimentalInputs().getInputDataSources().isEmpty()) {
+                        for (InputDataSource in : conf.getExperimentalInputs().getInputDataSources()) {
+                            result.add(in.getFile().getPath());
+                            log.finest(" add: " + in.getFile().getPath());
+                        }
                     }
                 }
-
             }
             return result;
 	}
@@ -81,7 +83,12 @@ public class ComputeStats extends AbstractAnalysisOperation<StatisticalAnalysisC
                     for (Execution e : conf.getExecutions()) {
                         if (!e.getResults().isEmpty()) {
                             for (ExperimentalResult er : e.getResults()) {
-                                result.add(er.toString());
+                                if(er instanceof ResultsFile){
+                                    ResultsFile rf=((ResultsFile)er);
+                                    result.add((rf.getFile().getPath()!=null?rf.getFile().getPath():"")+
+                                            (rf.getFile().getName()!=null?rf.getFile().getName():""));
+                                }else
+                                    result.add(er.toString());
                             }
                         }
                     }
@@ -138,9 +145,8 @@ public class ComputeStats extends AbstractAnalysisOperation<StatisticalAnalysisC
             }
             log.finest(" Data: "+result.toString());
             return result;*/
-            CSVLoader loader=new CSVLoader(null);
-            InputStream is =  IOUtils.toInputStream(csvContent);
-            dataset=loader.load(is, "csv");
+            CSVLoader loader=new CSVLoader(null);            
+            dataset=loader.load(csvContent, "csv");
         } catch (IOException ex) {
             java.util.logging.Logger.getLogger(ComputeStats.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
@@ -148,15 +154,18 @@ public class ComputeStats extends AbstractAnalysisOperation<StatisticalAnalysisC
 	}
 	
 	public List<StatisticalAnalysisOperation> generateStatisticalAnalysisOperations(BasicExperiment experiment){
-		List<AnalysisSpecification> analyses = experiment.getDesign().getExperimentalDesign().getIntendedAnalyses();
+		List<AnalysisSpecificationGroup> analyses = experiment.getDesign().getExperimentalDesign().getIntendedAnalyses();
 		List<StatisticalAnalysisOperation> operations = new ArrayList<StatisticalAnalysisOperation>();
-		for(AnalysisSpecification analSpec : analyses){
-			StatisticalAnalysisSpec statSpec = (StatisticalAnalysisSpec) analSpec;			
-			for(Statistic statistic : statSpec.getExpandedStatistics(experiment)){								
+		for(AnalysisSpecificationGroup anSpec : analyses){
+                    for(AnalysisSpecification analysis:anSpec.getAnalyses())
+			if(analysis instanceof StatisticalAnalysisSpec){
+                            for(Statistic statistic:((StatisticalAnalysisSpec)analysis).getExpandedStatistics(experiment)){								
 				StatisticalAnalysisOperation operation = new StatisticalAnalysisOperation(sce,renderer);			
                                 operation.setStatistic(statistic);
 				operations.add(operation);
+                            }
 			}
+                        
 		}
 		return operations;
 	}

@@ -1,7 +1,5 @@
 package es.us.isa.sedl.analysis.operations.validation;
 
-
-
 import es.us.isa.sedl.core.BasicExperiment;
 import es.us.isa.sedl.core.analysis.datasetspecification.GroupFilter;
 import es.us.isa.sedl.core.analysis.datasetspecification.ValuationFilter;
@@ -16,6 +14,7 @@ import es.us.isa.sedl.grammar.SEDL4PeopleLexer;
 import java.util.ArrayList;
 import java.util.List;
 import es.us.isa.sedl.core.analysis.datasetspecification.Filter;
+import es.us.isa.sedl.core.design.AnalysisSpecificationGroup;
 import static es.us.isa.sedl.core.util.Error.ERROR_SEVERITY.ERROR;
 import es.us.isa.sedl.runtime.analysis.validation.ValidationError;
 import es.us.isa.sedl.runtime.analysis.validation.ValidationLevel;
@@ -47,61 +46,62 @@ public class MultipleComparison extends ValidationRule<BasicExperiment> {
         multipleComparisonNames.add(getTokenName(SEDL4PeopleLexer.COCHRAN_Q));
     }
 
-    //TODO: Se puede hacer más eficiente. Lo dejamos así para la demo del 7/3/14
+    //TODO: Se puede hacer mas eficiente. Lo dejamos asi� para la demo del 7/3/14
     @Override
     public List<ValidationError<BasicExperiment>> validate(BasicExperiment exp) {
 
         List<ValidationError<BasicExperiment>> lErrors = new ArrayList<ValidationError<BasicExperiment>>();
 
         _analysisLoop: //TODO: Refactorizar para soportar varias lineas de error
-        for (AnalysisSpecification eas : exp.getDesign().getExperimentalDesign().getIntendedAnalyses()) {
-            if (eas instanceof StatisticalAnalysisSpec) {
-                boolean multiple = true;
-                boolean multipleLevels = false;
-                StatisticalAnalysisSpec analysis = (StatisticalAnalysisSpec) eas;
+        for (AnalysisSpecificationGroup eas : exp.getDesign().getExperimentalDesign().getIntendedAnalyses()) {
+            for (AnalysisSpecification anspec : eas.getAnalyses()) {
+                if (anspec instanceof StatisticalAnalysisSpec) {
+                    boolean multiple = true;
+                    boolean multipleLevels = false;
+                    StatisticalAnalysisSpec analysis = (StatisticalAnalysisSpec) anspec;
+                    for (Statistic stat : analysis.getStatistic()) {
 
-                for (Statistic stat : analysis.getStatistic()) {
+                        if (stat instanceof NHST) {
+                            _search:
+                            for (Filter filter : stat.getDatasetSpecification().getFilters()) {
+                                String varName = "";
+                                if (filter instanceof GroupFilter) {
+                                    ((GroupFilter) filter).getGroup();
+                                } else if (filter instanceof ValuationFilter) {
+                                    for (VariableValuation varVal : ((ValuationFilter) filter).getVariableValuations()) {
+                                        varName = varVal.getVariable().getName();
 
-                    if (stat instanceof NHST) {
-                        _search:
-                        for (Filter filter : stat.getDatasetSpecification().getFilters()) {
-                            String varName = "";
-                            if (filter instanceof GroupFilter) {
-                                ((GroupFilter) filter).getGroup();
-                            } else if (filter instanceof ValuationFilter) {
-                                for (VariableValuation varVal : ((ValuationFilter) filter).getVariableValuations()) {
-                                    varName = varVal.getVariable().getName();
-
-                                    for (Variable designVariable : exp.getDesign().getVariables().getVariable()) {
-                                        if (designVariable.getName().equals(varName) && designVariable.getDomain() instanceof ExtensionDomain && ((ExtensionDomain) designVariable.getDomain()).getLevels().size() > 2) {
-                                            multipleLevels = true;
-                                            break _search;
+                                        for (Variable designVariable : exp.getDesign().getVariables().getVariable()) {
+                                            if (designVariable.getName().equals(varName) && designVariable.getDomain() instanceof ExtensionDomain && ((ExtensionDomain) designVariable.getDomain()).getLevels().size() > 2) {
+                                                multipleLevels = true;
+                                                break _search;
+                                            }
                                         }
-                                    }
 
+                                    }
                                 }
+
                             }
 
+                            NHST nhst = (NHST) stat;
+                            if (!multipleComparisonNames.contains(nhst.getName())) {
+                                multiple = false;
+                            }
                         }
 
-                        NHST nhst = (NHST) stat;
-                        if (!multipleComparisonNames.contains(nhst.getName())) {
-                            multiple = false;
-                        }
                     }
 
+                    if (multiple == false && multipleLevels) {
+                        String errDesc = "Multiple datasets cannot be compared using simple comparison tests. Use a multiple comparison test instead.";
+                        ValidationError<BasicExperiment> error = new ValidationError<BasicExperiment>(exp, ERROR, errDesc);
+                        lErrors.add(error);
+                        break _analysisLoop;
+                    }
+
+                    multipleLevels = false;
+                    multiple = true;
+
                 }
-
-                if (multiple == false && multipleLevels) {
-                    String errDesc = "Multiple datasets cannot be compared using simple comparison tests. Use a multiple comparison test instead.";
-                    ValidationError<BasicExperiment> error = new ValidationError<BasicExperiment>(exp, ERROR, errDesc);
-                    lErrors.add(error);
-                    break _analysisLoop;
-                }
-
-                multipleLevels = false;
-                multiple = true;
-
             }
         }
 

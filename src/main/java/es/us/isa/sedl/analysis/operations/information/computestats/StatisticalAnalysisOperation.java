@@ -6,6 +6,8 @@ import java.util.List;
 
 import es.us.isa.jdataset.DataSet;
 import es.us.isa.sedl.core.BasicExperiment;
+import es.us.isa.sedl.core.analysis.datasetspecification.DatasetSpecification;
+import es.us.isa.sedl.core.analysis.datasetspecification.Projection;
 import es.us.isa.sedl.core.analysis.statistic.Statistic;
 import es.us.isa.sedl.core.analysis.statistic.StatisticalAnalysisResult;
 import es.us.isa.sedl.core.util.Error.ERROR_SEVERITY;
@@ -67,9 +69,14 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
     }
     
     public List<StatisticalAnalysisResult> apply(DataSet dataset,BasicExperiment experiment){
-        this.dataset = this.statistic.getDatasetSpecification().apply(dataset,experiment);
+        
+        if(this.statistic.getDatasetSpecification()!=null){
+            validateDatasetSpecfication(dataset,this.statistic.getDatasetSpecification());
+            this.dataset = this.statistic.getDatasetSpecification().apply(dataset,experiment);
+        }
         try {
-            this.setResults(statisticsComputingEngine.compute(this));
+            if(this.errors.isEmpty())
+                this.setResults(statisticsComputingEngine.compute(this));
         } catch (UnsupportedStatisticException ex) {
             this.result=null;
             this.errors.add(new ValidationError(this,ERROR_SEVERITY.ERROR,
@@ -274,5 +281,17 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
         for(StatisticalAnalysisResult statResult:result)
             res.append(resultsRenderer.render(statResult));
         return res.toString();
+    }
+
+    private void validateDatasetSpecfication(DataSet dataset,DatasetSpecification spec) {
+        ValidationError error;
+        for(Projection p:spec.getProjections()){
+            for(String variable:p.getProjectedVariables()){
+                if(dataset.getColumn(variable)==null){
+                    error=new ValidationError(spec, ERROR_SEVERITY.ERROR, "Variable '"+variable+"' is not present in the datset as a column");
+                    this.errors.add(error);
+                }
+            }
+        }
     }
 }

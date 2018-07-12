@@ -277,7 +277,7 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
     }*/
     
     public String renderResults(){
-        StringBuilder res=new StringBuilder();
+        StringBuilder res=new StringBuilder();        
         for(StatisticalAnalysisResult statResult:result)
             res.append(resultsRenderer.render(statResult));
         return res.toString();

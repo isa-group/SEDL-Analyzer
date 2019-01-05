@@ -7,7 +7,7 @@ import java.util.List;
 
 
 import es.us.isa.sedl.analysis.operations.information.SampleSize;
-import es.us.isa.sedl.core.BasicExperiment;
+import es.us.isa.sedl.core.ControlledExperiment;
 import static es.us.isa.sedl.core.util.Error.ERROR_SEVERITY.WARNING;
 import es.us.isa.sedl.runtime.analysis.validation.ValidationError;
 import es.us.isa.sedl.runtime.analysis.validation.ValidationLevel;
@@ -18,7 +18,7 @@ import es.us.isa.sedl.runtime.analysis.validation.ValidationRule;
  *
  * @author japarejo
  */
-public class SmallSampling extends ValidationRule<BasicExperiment>{
+public class SmallSampling extends ValidationRule<ControlledExperiment>{
 
     public static final String CODE = "SMALL-SAMPLING";
     public static final String NAME = "Small Sampling";
@@ -44,15 +44,15 @@ public class SmallSampling extends ValidationRule<BasicExperiment>{
     }
 
     @Override
-    public List<ValidationError<BasicExperiment>> validate(BasicExperiment exp) {
-        List<ValidationError<BasicExperiment>> errors=null;
+    public List<ValidationError<ControlledExperiment>> validate(ControlledExperiment exp) {
+        List<ValidationError<ControlledExperiment>> errors=null;
         Integer experimentSampleSize=sampleSize.apply(exp);
         if(experimentSampleSize>=threshold)
             errors=Collections.EMPTY_LIST;
         else{
-            errors=new ArrayList<ValidationError<BasicExperiment>>();
+            errors=new ArrayList<ValidationError<ControlledExperiment>>();
             String description="The size of the sample used in the experiment is too small";
-            ValidationError<BasicExperiment> error=new ValidationError<BasicExperiment>(exp, WARNING, description);
+            ValidationError<ControlledExperiment> error=new ValidationError<ControlledExperiment>(exp, WARNING, description);
             errors.add(error);
         }
         return errors;

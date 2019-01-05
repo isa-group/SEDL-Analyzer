@@ -1,12 +1,10 @@
 package es.us.isa.sedl.analysis.operations.validation;
 
-import es.us.isa.sedl.core.BasicExperiment;
+import es.us.isa.sedl.core.ControlledExperiment;
 import es.us.isa.sedl.core.analysis.datasetspecification.GroupFilter;
 import es.us.isa.sedl.core.analysis.datasetspecification.ValuationFilter;
-import es.us.isa.sedl.core.analysis.statistic.NHST;
+import es.us.isa.sedl.core.analysis.statistic.Nhst;
 import es.us.isa.sedl.core.analysis.statistic.Statistic;
-import es.us.isa.sedl.core.design.StatisticalAnalysisSpec;
-import es.us.isa.sedl.core.design.AnalysisSpecification;
 import es.us.isa.sedl.core.design.ExtensionDomain;
 import es.us.isa.sedl.core.design.Variable;
 import es.us.isa.sedl.core.design.VariableValuation;
@@ -14,6 +12,7 @@ import es.us.isa.sedl.grammar.SEDL4PeopleLexer;
 import java.util.ArrayList;
 import java.util.List;
 import es.us.isa.sedl.core.analysis.datasetspecification.Filter;
+import es.us.isa.sedl.core.analysis.statistic.StatisticalAnalysisSpec;
 import es.us.isa.sedl.core.design.AnalysisSpecificationGroup;
 import static es.us.isa.sedl.core.util.Error.ERROR_SEVERITY.ERROR;
 import es.us.isa.sedl.runtime.analysis.validation.ValidationError;
@@ -24,7 +23,7 @@ import es.us.isa.sedl.runtime.analysis.validation.ValidationRule;
  *
  * @author japarejo
  */
-public class MultipleComparison extends ValidationRule<BasicExperiment> {
+public class MultipleComparison extends ValidationRule<ControlledExperiment> {
 
     public static final String CODE = "MULTIPLE-COMPARISON";
     public static final String NAME = "Multiple Comparison";
@@ -48,60 +47,58 @@ public class MultipleComparison extends ValidationRule<BasicExperiment> {
 
     //TODO: Se puede hacer mas eficiente. Lo dejamos asi­ para la demo del 7/3/14
     @Override
-    public List<ValidationError<BasicExperiment>> validate(BasicExperiment exp) {
+    public List<ValidationError<ControlledExperiment>> validate(ControlledExperiment exp) {
 
-        List<ValidationError<BasicExperiment>> lErrors = new ArrayList<ValidationError<BasicExperiment>>();
+        List<ValidationError<ControlledExperiment>> lErrors = new ArrayList<ValidationError<ControlledExperiment>>();
 
         _analysisLoop: //TODO: Refactorizar para soportar varias lineas de error
         for (AnalysisSpecificationGroup eas : exp.getDesign().getExperimentalDesign().getIntendedAnalyses()) {
-            for (AnalysisSpecification anspec : eas.getAnalyses()) {
-                if (anspec instanceof StatisticalAnalysisSpec) {
-                    boolean multiple = true;
-                    boolean multipleLevels = false;
-                    StatisticalAnalysisSpec analysis = (StatisticalAnalysisSpec) anspec;
-                    for (Statistic stat : analysis.getStatistic()) {
+            if (eas instanceof StatisticalAnalysisSpec) {
+                boolean multiple = true;
+                boolean multipleLevels = false;
+                StatisticalAnalysisSpec analysis = (StatisticalAnalysisSpec) eas;
+                for (Statistic stat : analysis.getStatistic()) {
 
-                        if (stat instanceof NHST) {
-                            _search:
-                            for (Filter filter : stat.getDatasetSpecification().getFilters()) {
-                                String varName = "";
-                                if (filter instanceof GroupFilter) {
-                                    ((GroupFilter) filter).getGroup();
-                                } else if (filter instanceof ValuationFilter) {
-                                    for (VariableValuation varVal : ((ValuationFilter) filter).getVariableValuations()) {
-                                        varName = varVal.getVariable().getName();
+                    if (stat instanceof Nhst) {
+                        _search:
+                        for (Filter filter : stat.getDatasetSpecification().getFilters()) {
+                            String varName = "";
+                            if (filter instanceof GroupFilter) {
+                                ((GroupFilter) filter).getGroup();
+                            } else if (filter instanceof ValuationFilter) {
+                                for (VariableValuation varVal : ((ValuationFilter) filter).getVariableValuations()) {
+                                    varName = varVal.getVariable();
 
-                                        for (Variable designVariable : exp.getDesign().getVariables().getVariable()) {
-                                            if (designVariable.getName().equals(varName) && designVariable.getDomain() instanceof ExtensionDomain && ((ExtensionDomain) designVariable.getDomain()).getLevels().size() > 2) {
-                                                multipleLevels = true;
-                                                break _search;
-                                            }
+                                    for (Variable designVariable : exp.getDesign().getVariables().getVariables()) {
+                                        if (designVariable.getName().equals(varName) && designVariable.getDomain() instanceof ExtensionDomain && ((ExtensionDomain) designVariable.getDomain()).getLevels().size() > 2) {
+                                            multipleLevels = true;
+                                            break _search;
                                         }
-
                                     }
+
                                 }
-
                             }
 
-                            NHST nhst = (NHST) stat;
-                            if (!multipleComparisonNames.contains(nhst.getName())) {
-                                multiple = false;
-                            }
                         }
 
+                        Nhst nhst = (Nhst) stat;
+                        if (!multipleComparisonNames.contains(nhst.getName())) {
+                            multiple = false;
+                        }
                     }
-
-                    if (multiple == false && multipleLevels) {
-                        String errDesc = "Multiple datasets cannot be compared using simple comparison tests. Use a multiple comparison test instead.";
-                        ValidationError<BasicExperiment> error = new ValidationError<BasicExperiment>(exp, ERROR, errDesc);
-                        lErrors.add(error);
-                        break _analysisLoop;
-                    }
-
-                    multipleLevels = false;
-                    multiple = true;
 
                 }
+
+                if (multiple == false && multipleLevels) {
+                    String errDesc = "Multiple datasets cannot be compared using simple comparison tests. Use a multiple comparison test instead.";
+                    ValidationError<ControlledExperiment> error = new ValidationError<ControlledExperiment>(exp, ERROR, errDesc);
+                    lErrors.add(error);
+                    break _analysisLoop;
+                }
+
+                multipleLevels = false;
+                multiple = true;
+
             }
         }
 

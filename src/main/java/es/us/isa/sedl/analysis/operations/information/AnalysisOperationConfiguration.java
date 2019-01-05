@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-import es.us.isa.sedl.core.BasicExperiment;
+import es.us.isa.sedl.core.ControlledExperiment;
 import es.us.isa.sedl.core.analysis.datasetspecification.Filter;
 import es.us.isa.sedl.core.analysis.datasetspecification.GroupingProjection;
 import es.us.isa.sedl.core.analysis.datasetspecification.Projection;
@@ -20,8 +20,8 @@ public class AnalysisOperationConfiguration extends AbstractAnalysisOperation<Ob
     private List<List<Double>> resultsOperation; //resultados asociados a unas variables
     private List<List<String>> dataset;
     private List<String> functionParam;
-    private List<ValidationError<BasicExperiment>> errors;
-    public void setErrors(List<ValidationError<BasicExperiment>> errors) {
+    private List<ValidationError<ControlledExperiment>> errors;
+    public void setErrors(List<ValidationError<ControlledExperiment>> errors) {
         this.errors = errors;
     }
     public AnalysisOperationConfiguration(){
@@ -33,7 +33,7 @@ public class AnalysisOperationConfiguration extends AbstractAnalysisOperation<Ob
         resultsOperation = new ArrayList<List<Double>>();
         dataset = new ArrayList<List<String>>();
         functionParam = new ArrayList<String>();
-        errors = new ArrayList<ValidationError<BasicExperiment>>();
+        errors = new ArrayList<ValidationError<ControlledExperiment>>();
     }
     public String getFunction() {
         return function;
@@ -83,7 +83,7 @@ public class AnalysisOperationConfiguration extends AbstractAnalysisOperation<Ob
     public void setFunctionParam(List<String> functionParam) {
         this.functionParam = functionParam;
     }
-    public List<ValidationError<BasicExperiment>> getErrors() {
+    public List<ValidationError<ControlledExperiment>> getErrors() {
         return errors;
     }
     public String toString() {

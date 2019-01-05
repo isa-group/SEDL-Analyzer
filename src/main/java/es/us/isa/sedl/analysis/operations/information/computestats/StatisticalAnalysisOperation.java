@@ -5,7 +5,7 @@ import java.util.List;
 
 
 import es.us.isa.jdataset.DataSet;
-import es.us.isa.sedl.core.BasicExperiment;
+import es.us.isa.sedl.core.ControlledExperiment;
 import es.us.isa.sedl.core.analysis.datasetspecification.DatasetSpecification;
 import es.us.isa.sedl.core.analysis.datasetspecification.Projection;
 import es.us.isa.sedl.core.analysis.statistic.Statistic;
@@ -68,7 +68,7 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
         return apply(dataset,null);
     }
     
-    public List<StatisticalAnalysisResult> apply(DataSet dataset,BasicExperiment experiment){
+    public List<StatisticalAnalysisResult> apply(DataSet dataset,ControlledExperiment experiment){
         
         if(this.statistic.getDatasetSpecification()!=null){
             validateDatasetSpecfication(dataset,this.statistic.getDatasetSpecification());
@@ -125,13 +125,13 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
         this.result = result;
     }
 
-    public void generateDataset(BasicExperiment experiment) {	        
+    public void generateDataset(ControlledExperiment experiment) {	        
         this.dataset = statistic.getDatasetSpecification().apply(dataset);
     }
 
     
     /*
-    private void calculateTypeOnlyProjection(List<List<String>> dataset, BasicExperiment experiment) {
+    private void calculateTypeOnlyProjection(List<List<String>> dataset, ControlledExperiment experiment) {
         List<String> params = new ArrayList<String>();
         String param = "Filter( ";
         for (Projection p : operation.getProj()) {
@@ -151,7 +151,7 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
                         }
                     }
                 } else {
-                    ValidationError<BasicExperiment> vs = new ValidationError<BasicExperiment>(experiment, Error.ERROR_SEVERITY.ERROR, "[ERROR] Variable not found: " + varName);
+                    ValidationError<ControlledExperiment> vs = new ValidationError<ControlledExperiment>(experiment, Error.ERROR_SEVERITY.ERROR, "[ERROR] Variable not found: " + varName);
                     operation.getErrors().add(vs);
                     System.out.println("[ERROR] Variable name: " + varName);
                 }
@@ -182,7 +182,7 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
         operation.setFunctionParam(params);
     }
 
-    private void calculateTypeOnlyFilter(List<List<String>> dataset, BasicExperiment experiment) {
+    private void calculateTypeOnlyFilter(List<List<String>> dataset, ControlledExperiment experiment) {
         List<String> header = operation.getVariables().get(0);
         for (Filter filter : operation.getFilters()) {
             ValuationFilter vf = (ValuationFilter) filter;
@@ -192,7 +192,7 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
                 if (header.contains(outcomes.get(0).getName())) {
                     indexValues = header.indexOf(outcomes.get(0).getName());
                 } else {
-                    ValidationError<BasicExperiment> vs = new ValidationError<BasicExperiment>(experiment, Error.ERROR_SEVERITY.ERROR,
+                    ValidationError<ControlledExperiment> vs = new ValidationError<ControlledExperiment>(experiment, Error.ERROR_SEVERITY.ERROR,
                             "[ERROR] Outcome not found in dataset: " + outcomes.get(0).getName());
                     operation.getErrors().add(vs);
                     System.out.println("[ERROR] Outcome not found in dataset: " + outcomes.get(0).getName());
@@ -206,7 +206,7 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
                     }
                 }
                 if (newLine.isEmpty()) {
-                    ValidationError<BasicExperiment> vs = new ValidationError<BasicExperiment>(experiment, Error.ERROR_SEVERITY.ERROR, "[ERROR] Level not found: " + lavelName);
+                    ValidationError<ControlledExperiment> vs = new ValidationError<ControlledExperiment>(experiment, Error.ERROR_SEVERITY.ERROR, "[ERROR] Level not found: " + lavelName);
                     operation.getErrors().add(vs);
                     System.out.println("ERROR no existe lavel: " + lavelName);
                 }
@@ -216,7 +216,7 @@ public class StatisticalAnalysisOperation implements AnalysisOperation<DataSet, 
         }
     }
     
-    private void calculateTypeFilterAndGroup(List<List<String>> dataset, BasicExperiment experiment) {
+    private void calculateTypeFilterAndGroup(List<List<String>> dataset, ControlledExperiment experiment) {
         List<String> header = operation.getVariables().get(0);
         List<Filter> filters = operation.getFilters();
         List<GroupingProjection> groups = operation.getGrouping();

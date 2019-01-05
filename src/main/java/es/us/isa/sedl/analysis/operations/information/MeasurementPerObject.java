@@ -1,13 +1,13 @@
 package es.us.isa.sedl.analysis.operations.information;
 
 
-import es.us.isa.sedl.core.BasicExperiment;
+import es.us.isa.sedl.core.ControlledExperiment;
 import es.us.isa.sedl.core.design.FullySpecifiedExperimentalDesign;
 import es.us.isa.sedl.core.design.ProtocolScheme;
 import es.us.isa.sedl.runtime.analysis.AbstractAnalysisOperation;
 
 
-public class MeasurementPerObject  extends AbstractAnalysisOperation<BasicExperiment, Integer> {
+public class MeasurementPerObject  extends AbstractAnalysisOperation<ControlledExperiment, Integer> {
 
 	public static final String NAME = "Measurement per object";
 	public static final String DESCRIPTION = "";
@@ -17,7 +17,7 @@ public class MeasurementPerObject  extends AbstractAnalysisOperation<BasicExperi
 	}
 
 	@Override
-	public Integer apply(BasicExperiment input) {
+	public Integer apply(ControlledExperiment input) {
 		
 		Integer result = 1;
 		FullySpecifiedExperimentalDesign design = (FullySpecifiedExperimentalDesign) input.getDesign().getExperimentalDesign();

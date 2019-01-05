@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-import es.us.isa.sedl.core.BasicExperiment;
+import es.us.isa.sedl.core.ControlledExperiment;
 import es.us.isa.sedl.core.configuration.Configuration;
 import es.us.isa.sedl.core.configuration.InputDataSource;
 import es.us.isa.sedl.core.design.Level;
@@ -24,7 +24,7 @@ import es.us.isa.sedl.runtime.analysis.validation.ValidationRule;
 
 import java.util.logging.Logger;
 
-public class OutOfRange extends ValidationRule<BasicExperiment>{
+public class OutOfRange extends ValidationRule<ControlledExperiment>{
 
     private static final Logger log=Logger.getLogger(OutOfRange.class.getName());
     
@@ -43,7 +43,7 @@ public class OutOfRange extends ValidationRule<BasicExperiment>{
 	//VALIDATE METHODS
 	//-----------------------------
 
-	public List<String> parseDocument(BasicExperiment element){
+	public List<String> parseDocument(ControlledExperiment element){
 
 		List<String> csvRoots = new ArrayList<String>();
 		log.finest("create List ");
@@ -104,28 +104,28 @@ public class OutOfRange extends ValidationRule<BasicExperiment>{
 		return result;
 	}
 	@Override
-	public List<ValidationError<BasicExperiment>> validate(BasicExperiment element) {
+	public List<ValidationError<ControlledExperiment>> validate(ControlledExperiment element) {
 		
-		List<ValidationError<BasicExperiment>> errors=new ArrayList<ValidationError<BasicExperiment>>();
+		List<ValidationError<ControlledExperiment>> errors=new ArrayList<ValidationError<ControlledExperiment>>();
 		
-		String variableType = element.getDesign().getVariables().getVariable().get(0).getKind().name().toString();
+		String variableType = element.getDesign().getVariables().getVariables().get(0).getKind().name().toString();
 		log.finest("variableType: "+variableType);
 		
 		boolean result = true;
 		Variables variables = element.getDesign().getVariables();
-		for(Variable v : variables.getVariable()){
+		for(Variable v : variables.getVariables()){
 			for(Outcome out : element.getDesign().getOutcomes()){
 				for(Level lOut : out.getDomain().getLevels()){
 					try {
-						result = result && validateVariable(getVariablesValues(variables.getVariable(), v.getName()), lOut.getValue());
+						result = result && validateVariable(getVariablesValues(variables.getVariables(), v.getName()), lOut.getValue());
 						if(!result){
 							String description = "[ERROR/WARNING] Variable '"+v.getName()+"' it's Out Of Range, or maybe is necessary to specify a dataset.";
-							ValidationError<BasicExperiment> error = new ValidationError<BasicExperiment>(element, ERROR_SEVERITY.WARNING, description);
+							ValidationError<ControlledExperiment> error = new ValidationError<ControlledExperiment>(element, ERROR_SEVERITY.WARNING, description);
 							errors.add(error);
 						}
 					} catch (Exception e) {
 						String description = "[ERROR] To evaluate variable '"+v.getName()+"' is necessary to specify a dataset.";
-						ValidationError<BasicExperiment> error = new ValidationError<BasicExperiment>(element, ERROR_SEVERITY.ERROR, description);
+						ValidationError<ControlledExperiment> error = new ValidationError<ControlledExperiment>(element, ERROR_SEVERITY.ERROR, description);
 						errors.add(error);
 					}
 				}
@@ -135,10 +135,10 @@ public class OutOfRange extends ValidationRule<BasicExperiment>{
 	}
 	
 
-	public List<ValidationError<BasicExperiment>> validateCsv(BasicExperiment element, String csvContent) {
+	public List<ValidationError<ControlledExperiment>> validateCsv(ControlledExperiment element, String csvContent) {
 		log.finest("csv Content: "+csvContent);
-		List<ValidationError<BasicExperiment>> errors=new ArrayList<ValidationError<BasicExperiment>>();
-		ValidationError<BasicExperiment> error=null;
+		List<ValidationError<ControlledExperiment>> errors=new ArrayList<ValidationError<ControlledExperiment>>();
+		ValidationError<ControlledExperiment> error=null;
                 Level observation=new Level();
 		boolean result = true;
 		
@@ -150,7 +150,7 @@ public class OutOfRange extends ValidationRule<BasicExperiment>{
 				for(int i=1; i<dataset.size();i++){
 					observation.setValue(dataset.get(i).get(outIndex));
                                         if(!out.getDomain().contains(observation)){
-                                            error=new ValidationError<BasicExperiment>(element, ERROR_SEVERITY.ERROR, "The value '"+observation.getValue()+"' of line "+i+" for variable "+out.getName()+"  is not valid.");
+                                            error=new ValidationError<ControlledExperiment>(element, ERROR_SEVERITY.ERROR, "The value '"+observation.getValue()+"' of line "+i+" for variable "+out.getName()+"  is not valid.");
                                             errors.add(error);
                                         }
 				}
